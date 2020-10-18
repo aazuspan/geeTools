@@ -26,7 +26,7 @@ var maxCloudCoverPercent = 10;
 var studyArea = ee.Geometry.Point(lat, lng);
 var dNBR = generateDNBR(prefireDate, postfireDate, studyArea, maxCloudCoverPercent);
 
-Map.addLayer(dNBR, {min: -0.2, max: 1.2}, "dNBR");
+Map.addLayer(dNBR, { min: -0.2, max: 1.2 }, "dNBR");
 
 
 // Generate a dNBR from prefire and postfire images
@@ -35,7 +35,7 @@ function generateDNBR(prefireDate, postfireDate, studyArea, maxCloudCoverPercent
     .filterBounds(studyArea)
     .filterMetadata("CLOUD_COVER_LAND", "not_greater_than", maxCloudCoverPercent)
     .sort("CLOUD_COVER_LAND", true);
-  
+
   var prefireImage = getNearestImage(imgs, prefireDate);
   print(ee.String('Prefire Imagery: ').cat(prefireImage.date().format('y-M-d')));
   var postfireImage = getNearestImage(imgs, postfireDate);
@@ -43,7 +43,7 @@ function generateDNBR(prefireDate, postfireDate, studyArea, maxCloudCoverPercent
 
   var prefireNBR = generateNBR(prefireImage);
   var postfireNBR = generateNBR(postfireImage);
-  
+
   return prefireNBR.subtract(postfireNBR);
 }
 
@@ -56,7 +56,7 @@ function generateNBR(image) {
 function getNearestImage(imageCollection, targetDate) {
   var beforeImage = getNearestBeforeImage(imageCollection, targetDate);
   var afterImage = getNearestAfterImage(imageCollection, targetDate);
-  
+
   // Creating a new collection and sorting allows for async operations that are MUCH faster than comparing time deltas synchronously
   var nearImages = ee.ImageCollection([beforeImage, afterImage]);
   nearImages = nearImages.sort("DATE_ACQUIRED");
