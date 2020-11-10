@@ -5,7 +5,7 @@
  * @param {string} NIR The name of the NIR band in both images.
  * @param {string} SWIR The name of the SWIR band in both images.
  * @return {ee.Image} A multiband image containing pre- and post-fire NBR,
- *  dNBR, RdNBR, and estimated basal area mortality as bands.
+ *  dNBR, RdNBR, estimated basal area mortality, and refugia status as bands.
  */
 exports.calculateBurnSeverity = function (pre, post, NIR, SWIR) {
   // Normalized burn ratio
