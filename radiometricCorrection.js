@@ -5,57 +5,73 @@
  * @param {ee.Feature | ee.FeatureCollection} obj The location or extent of
  *  the dark object within the image.
  * @param {ee.Number} scale The scale to calculate dark object statistics at.
+ * @param {ee.Number} maxPixels Maximum number of pixels used to calculate
+ *  statistics.
  * @return {ee.Image} The radiometrically corrected image.
  */
-exports.darkObjectSubtraction = function (img, obj, scale) {
-  var offset = img.reduceRegion({
-    reducer: ee.Reducer.mean(),
-    geometry: obj,
-    scale: scale,
-  });
+exports.darkObjectSubtraction = function (img, obj, scale, maxPixels) {
+  var offset = exports.reduceImage(
+    img,
+    ee.Reducer.mean(),
+    obj,
+    scale,
+    maxPixels
+  );
 
-  var offsetImg = offset.toImage(img.bandNames());
-
-  var imgAdj = img.subtract(offsetImg);
+  var imgAdj = img.subtract(offset);
 
   return imgAdj;
 };
 
 /**
  * Rescale the mean and standard deviation of a target image to match a
- * reference image. This can be used to apply pseudo-invariant feature (PIF)
- * normalization if an appropriate feature is passed as geometry.
- *
- * See Volchok and Schott, 1986 for a detailed description of PIF normalization.
- *
+ * reference image. This can be used to implement pseudo-invariant feature
+ * (PIF) normalization if an appropriate geometry is passed.
  * @param {ee.Image} targetImage An image to rescale.
  * @param {ee.Image} referenceImage An image to rescale towards.
  * @param {ee.Geometry} geometry The region to generate image statistics over.
  * @param {ee.Number} scale The scale to generate image statistics at.
+ * @param {ee.Number} maxPixels Maximum number of pixels used to calculate
+ *  statistics.
  * @return {ee.Image} A rescaled version of targetImage.
  */
 exports.linearHistogramMatch = function (
   targetImage,
   referenceImage,
   geometry,
-  scale
+  scale,
+  maxPixels
 ) {
   var offsetTarget = exports.reduceImage(
     targetImage,
     ee.Reducer.mean(),
     geometry,
-    scale
+    scale,
+    maxPixels
   );
   var offset = exports.reduceImage(
     referenceImage,
     ee.Reducer.mean(),
     geometry,
-    scale
+    scale,
+    maxPixels
   );
   var rescale = exports
-    .reduceImage(referenceImage, ee.Reducer.stdDev(), geometry, scale)
+    .reduceImage(
+      referenceImage,
+      ee.Reducer.stdDev(),
+      geometry,
+      scale,
+      maxPixels
+    )
     .divide(
-      exports.reduceImage(targetImage, ee.Reducer.stdDev(), geometry, scale)
+      exports.reduceImage(
+        targetImage,
+        ee.Reducer.stdDev(),
+        geometry,
+        scale,
+        maxPixels
+      )
     );
 
   var rescaledTarget = targetImage
@@ -75,6 +91,8 @@ exports.linearHistogramMatch = function (
  *  Defaults to the geometry of the input image.
  * @param {ee.Number} scale The scale to generate image statistics at. Defaults
  *  to the nominal scale of the input image.
+ * @param {ee.Number} maxPixels Maximum number of pixels used to calculate
+ *  statistics.
  * @return {ee.Image} An image with the same number of bands as the input
  *  image, where each band is a constant value of the reduced value of the
  *  corresponding band of the input image.
