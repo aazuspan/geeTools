@@ -10,6 +10,6 @@ foo.bar();
 
 For example:
 ```javascript
-var burnSeverity = require("users/aazuspan/geeScripts:burnSeverity")
+var burnSeverity = require("users/aazuspan/geeScripts:burnSeverity.js")
 burnSeverity.calculateBurnSeverity( ... );
 ```
