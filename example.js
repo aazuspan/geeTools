@@ -2,7 +2,7 @@
 Example: Calculating burn severity metrics for the 2017 Oak Fire
 */
 
-var burnSeverity = require("users/aazuspan/geeScripts:burnSeverity");
+var burnSeverity = require("users/aazuspan/geeScripts:burnSeverity.js");
 
 // L8 imagery prior to the fire
 var prefire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
@@ -25,7 +25,7 @@ Map.addLayer(
 /*
 Example: Calculating HLI from SRTM data.
 */
-var hli = require("users/aazuspan/geeScripts:hli");
+var hli = require("users/aazuspan/geeScripts:hli.js");
 var srtm = ee.Image("CGIAR/SRTM90_V4");
 var h = hli.hli(srtm);
 
@@ -35,7 +35,7 @@ Map.addLayer(h, { min: 0.5, max: 1 }, "HLI");
 Example calculating TPI and slope position
 */
 
-var tpi = require("users/aazuspan/geeScripts:TPI");
+var tpi = require("users/aazuspan/geeScripts:TPI.js");
 
 // Load elevation data
 var srtm = ee.Image("USGS/SRTMGL1_003");
