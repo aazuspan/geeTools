@@ -25,7 +25,7 @@ Map.addLayer(
 /*
 Example: Calculating HLI from SRTM data.
 */
-var hli = require("users/aazuspan/geeScripts:hli.js");
+var hli = require("users/aazuspan/geeScripts:HLI.js");
 var srtm = ee.Image("CGIAR/SRTM90_V4");
 var h = hli.hli(srtm);
 
