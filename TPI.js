@@ -1,3 +1,5 @@
+var utils = require("users/aazuspan/geeScripts:utils.js");
+
 // Calculate topographic position index based on a DEM image, following Weiss 2001.
 // Radius, window_shape, and units define the TPI kernel, and are passed to ee.Image.focal_mean
 exports.tpi = function (dem, radius, window_shape, units) {
@@ -33,7 +35,7 @@ exports.slopePosition = function (
       scale: scale,
       maxPixels: maxPixels,
     })
-    .getNumber("elevation");
+    .getNumber(tpi.bandNames().get(0));
 
   // Reclassify TPI to slope position
   var tpiReclass = ee
