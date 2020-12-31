@@ -37,8 +37,18 @@ Example calculating TPI and slope position
 
 var tpi = require("users/aazuspan/geeScripts:TPI.js");
 
-// Load elevation data
-var srtm = ee.Image("USGS/SRTMGL1_003");
+var aoi = ee.Geometry.Polygon(
+  [
+    [
+      [-123.92382561385939, 42.39507820959633],
+      [-123.92382561385939, 41.57642883612384],
+      [-122.83343254745314, 41.57642883612384],
+      [-122.83343254745314, 42.39507820959633],
+    ],
+  ],
+  null,
+  false
+);
 
 // Calculate slope in degrees
 var slope = ee.Terrain.slope(srtm);
@@ -47,7 +57,6 @@ var slope = ee.Terrain.slope(srtm);
 var tpi300 = tpi.tpi(srtm, 300, "square", "meters");
 
 // Reclassify TPI to discrete slope positions
-var slopePosition300 = tpi.slopePosition(tpi300, slope);
+var slopePosition300 = tpi.slopePosition(tpi300, slope, null, aoi, 100, 1e12);
 
-Map.addLayer(srtm, { min: 0, max: 4000 }, "Elevation");
 Map.addLayer(slopePosition300, { min: 1, max: 6 }, "Slope Position");
