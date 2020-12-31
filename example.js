@@ -1,7 +1,6 @@
 /*
 Example: Calculating burn severity metrics for the 2017 Oak Fire
 */
-
 var burnSeverity = require("users/aazuspan/geeScripts:burnSeverity.js");
 
 // L8 imagery prior to the fire
@@ -32,9 +31,8 @@ var h = hli.hli(srtm);
 Map.addLayer(h, { min: 0.5, max: 1 }, "HLI");
 
 /*
-Example calculating TPI and slope position
+Example: Calculating TPI and slope position
 */
-
 var tpi = require("users/aazuspan/geeScripts:TPI.js");
 
 var aoi = ee.Geometry.Polygon(
@@ -60,3 +58,74 @@ var tpi300 = tpi.tpi(srtm, 300, "square", "meters");
 var slopePosition300 = tpi.slopePosition(tpi300, slope, null, aoi, 100, 1e12);
 
 Map.addLayer(slopePosition300, { min: 1, max: 6 }, "Slope Position");
+
+/*
+Example: Applying radiometric correction
+*/
+
+var radCor = require("users/aazuspan/geeScripts:radiometricCorrection.js");
+
+// Identify a reference dark object, such as deep water
+var darkObject = ee.Geometry.Polygon(
+  [
+    [
+      [-124.74266276966597, 42.12268590007055],
+      [-124.74266276966597, 41.93396768286303],
+      [-124.52705608021284, 41.93396768286303],
+      [-124.52705608021284, 42.12268590007055],
+    ],
+  ],
+  null,
+  false
+);
+
+// Use Dark Object Subtraction to correct for atmospheric distortion
+var prefireDOS = radCor.darkObjectSubtraction(prefire, darkObject, 30, 1e13);
+var postfireDOS = radCor.darkObjectSubtraction(postfire, darkObject, 30, 1e13);
+
+Map.addLayer(
+  prefireDOS,
+  { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
+  "Prefire DOS"
+);
+Map.addLayer(
+  postfireDOS,
+  { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
+  "Postfire DOS"
+);
+
+// Identify pseudo-invariant features between prefire and postfire images; in
+// this case, ocean and a building.
+var PIF = ee.Geometry.MultiPolygon([
+  [
+    [
+      [-124.73859734350975, 41.90979183965181],
+      [-124.73688072974022, 41.88551473447749],
+      [-124.71834130102928, 41.88628152101927],
+      [-124.7216028671914, 41.91426293134146],
+    ],
+  ],
+  [
+    [
+      [-122.87238706850988, 42.428688503225544],
+      [-122.87242998385412, 42.4279599378424],
+      [-122.8702842166422, 42.4279124224146],
+      [-122.87024130129797, 42.42865682664584],
+    ],
+  ],
+]);
+
+// Use pseudo-invariant features to match the histogram of postfire imagery to
+// prefire imagery. All bands within each image must have the same projection,
+// so a subset of bands are selected.
+var postfireMatch = radCor.linearHistogramMatch(
+  postfire.select(["B5", "B4", "B3", "B2"]),
+  prefire.select(["B5", "B4", "B3", "B2"]),
+  PIF
+);
+
+Map.addLayer(
+  postfireMatch,
+  { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
+  "Postfire Matched"
+);

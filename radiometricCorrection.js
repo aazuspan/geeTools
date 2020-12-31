@@ -1,3 +1,5 @@
+var utils = require("users/aazuspan/geeScripts:utils.js");
+
 /**
  * Apply band-wise radiometric correction to remote sensing imagery using the
  * dark object subtraction (DOS) method.
@@ -98,15 +100,15 @@ exports.linearHistogramMatch = function (
  *  corresponding band of the input image.
  */
 exports.reduceImage = function (img, reducer, geometry, scale, maxPixels) {
-  if (exports.isMissing(geometry)) {
+  if (utils.isMissing(geometry)) {
     geometry = img.geometry();
   }
 
-  if (exports.isMissing(scale)) {
+  if (utils.isMissing(scale)) {
     scale = img.projection().nominalScale();
   }
 
-  if (exports.isMissing(maxPixels)) {
+  if (utils.isMissing(maxPixels)) {
     maxPixels = 1e12;
   }
 
