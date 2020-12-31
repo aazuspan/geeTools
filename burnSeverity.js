@@ -44,20 +44,3 @@ exports.calculateBurnSeverity = function (pre, post, NIR, SWIR) {
 
   return severityMetrics;
 };
-
-/*
-Example: Calculating burn severity metrics for the 2017 Oak Fire
-*/
-
-// L8 imagery prior to the fire
-var prefire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
-// L8 imagery one year after the fire
-var postfire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20180701");
-
-var severity = exports.calculateBurnSeverity(prefire, postfire, "B5", "B6");
-
-Map.addLayer(
-  severity,
-  { min: -250, max: 600, bands: ["preNBR", "postNBR", "postNBR"] },
-  "severity"
-);

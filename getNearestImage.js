@@ -1,5 +1,5 @@
 // Chooose the nearest image from a collection to a given date.
-function getNearestImage(imageCollection, targetDate) {
+exports.getNearestImage = function (imageCollection, targetDate) {
   var beforeImage = getNearestBeforeImage(imageCollection, targetDate);
   var afterImage = getNearestAfterImage(imageCollection, targetDate);
 
@@ -7,7 +7,7 @@ function getNearestImage(imageCollection, targetDate) {
   var nearImages = ee.ImageCollection([beforeImage, afterImage]);
   nearImages = nearImages.sort("DATE_ACQUIRED");
   return nearImages.first();
-}
+};
 
 // Choose the nearest image from a collection after a given date
 function getNearestAfterImage(imageCollection, targetDate) {

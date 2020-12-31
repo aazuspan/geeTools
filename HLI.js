@@ -1,3 +1,5 @@
+var utils = require("users/aazuspan/geeScripts:utils");
+
 /**
  * Calculate McCune and Keon 2002 Heat Load Index (HLI) with corrected coefficients from
  * McCune 2007. This implementation follows the R spatialEco library with the addition of
@@ -12,7 +14,7 @@
  */
 exports.hli = function (x, forceLatitude, forceHemisphere) {
   // If a latitude is forced, use the fixed latitude
-  if (!isMissing(forceLatitude)) {
+  if (!utils.isMissing(forceLatitude)) {
     try {
       var lat = ee.Image.constant(ee.Number(forceLatitude));
     } catch (err) {
@@ -27,10 +29,10 @@ exports.hli = function (x, forceLatitude, forceHemisphere) {
   else {
     lat = ee.Image.pixelLonLat().select("latitude");
   }
-  lat = deg2rad(lat);
+  lat = utils.deg2rad(lat);
 
   // If a hemisphere is forced, set the aspect folding coefficient based on the hemisphere
-  if (!isMissing(forceHemisphere)) {
+  if (!utils.isMissing(forceHemisphere)) {
     var foldCoeffs = { north: 225, south: 315 };
     try {
       var foldCoeff = ee.Image.constant(
@@ -49,15 +51,10 @@ exports.hli = function (x, forceLatitude, forceHemisphere) {
     foldCoeff = ee.Image(225).where(lat.lt(0), 315);
   }
 
-  var slope = deg2rad(ee.Terrain.slope(srtm));
+  var slope = utils.deg2rad(ee.Terrain.slope(x));
   // Folded aspect
-  var aspect = deg2rad(
-    ee.Terrain.aspect(srtm)
-      .subtract(foldCoeff)
-      .abs()
-      .multiply(-1)
-      .add(180)
-      .abs()
+  var aspect = utils.deg2rad(
+    ee.Terrain.aspect(x).subtract(foldCoeff).abs().multiply(-1).add(180).abs()
   );
 
   // Equation from McCune 2002 with corrected coefficients from McCune 2007
@@ -74,35 +71,3 @@ exports.hli = function (x, forceLatitude, forceHemisphere) {
 
   return h;
 };
-
-/**
- * Check if an object has a value. Helpful for finding missing arguments.
- * @param {object} x Any object
- * @return {boolean} True if the object is missing, false if it is not.
- */
-function isMissing(x) {
-  if (x === undefined || x === null) {
-    return true;
-  }
-  return false;
-}
-
-/**
- * Convert degrees to radians.
- * @param {ee.Number or ee.Image} deg An angle in degrees
- * @return {ee.Number or ee.Image} The angle in radians
- */
-function deg2rad(deg) {
-  var coeff = 180 / Math.PI;
-
-  return deg.divide(coeff);
-}
-
-/*
-Example: Calculating HLI from SRTM data.
-*/
-
-var srtm = ee.Image("CGIAR/SRTM90_V4");
-var h = exports.hli(srtm);
-
-Map.addLayer(h, { min: 0.5, max: 1 }, "HLI");
