@@ -10,16 +10,28 @@ exports.tpi = function (dem, radius, window_shape, units) {
 };
 
 // Reclassify a continuous TPI image into slope positions, following Weiss 2001
-exports.slopePosition = function (tpi, slope, flat_degrees) {
+exports.slopePosition = function (
+  tpi,
+  slope,
+  flat_degrees,
+  region,
+  scale,
+  maxPixels
+) {
   // Default "flat" is 5 degrees
   flat_degrees = flat_degrees || 5;
+
+  if (utils.isMissing(maxPixels)) {
+    maxPixels = 1e12;
+  }
 
   // Calculate the TPI standard deviation
   var sd = tpi
     .reduceRegion({
       reducer: ee.Reducer.stdDev(),
-      geometry: westCascades,
-      maxPixels: 1e9,
+      geometry: region,
+      scale: scale,
+      maxPixels: maxPixels,
     })
     .getNumber("elevation");
 
