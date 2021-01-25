@@ -129,3 +129,24 @@ Map.addLayer(
   { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
   "Postfire Matched"
 );
+
+/*
+Example: Cloud masking Sentinel-2 imagery
+*/
+
+// Load a Sentinel-2 image (1C or 2A)
+var s2 = ee.Image("COPERNICUS/S2/20190113T190741_20190113T190736_T10TEK");
+// Load the corresponding cloud probability image
+var prob = ee.Image(
+  "COPERNICUS/S2_CLOUD_PROBABILITY/20190113T190741_20190113T190736_T10TEK"
+);
+
+var cloudMasked = cloudMasking.probabilityCloudMask(s2, prob);
+
+Map.addLayer(s2, { bands: ["B4", "B3", "B2"], min: 0, max: 2000 }, "S2", false);
+Map.addLayer(
+  cloudMasked,
+  { bands: ["B4", "B3", "B2"], min: 0, max: 2000 },
+  "S2",
+  false
+);
