@@ -18,7 +18,8 @@ var severity = burnSeverity.calculateBurnSeverity(
 Map.addLayer(
   severity,
   { min: -250, max: 600, bands: ["preNBR", "postNBR", "postNBR"] },
-  "severity"
+  "severity",
+  false
 );
 
 /*
@@ -28,7 +29,7 @@ var hli = require("users/aazuspan/geeScripts:HLI.js");
 var srtm = ee.Image("CGIAR/SRTM90_V4");
 var h = hli.hli(srtm);
 
-Map.addLayer(h, { min: 0.5, max: 1 }, "HLI");
+Map.addLayer(h, { min: 0.5, max: 1 }, "HLI", false);
 
 /*
 Example: Calculating TPI and slope position
@@ -57,7 +58,7 @@ var tpi300 = tpi.tpi(srtm, 300, "square", "meters");
 // Reclassify TPI to discrete slope positions
 var slopePosition300 = tpi.slopePosition(tpi300, slope, null, aoi, 100, 1e12);
 
-Map.addLayer(slopePosition300, { min: 1, max: 6 }, "Slope Position");
+Map.addLayer(slopePosition300, { min: 1, max: 6 }, "Slope Position", false);
 
 /*
 Example: Applying radiometric correction
@@ -86,12 +87,14 @@ var postfireDOS = radCor.darkObjectSubtraction(postfire, darkObject, 30, 1e13);
 Map.addLayer(
   prefireDOS,
   { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
-  "Prefire DOS"
+  "Prefire DOS",
+  false
 );
 Map.addLayer(
   postfireDOS,
   { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
-  "Postfire DOS"
+  "Postfire DOS",
+  false
 );
 
 // Identify pseudo-invariant features between prefire and postfire images; in
@@ -127,12 +130,15 @@ var postfireMatch = radCor.linearHistogramMatch(
 Map.addLayer(
   postfireMatch,
   { min: 0, max: 0.4, bands: ["B5", "B4", "B3"] },
-  "Postfire Matched"
+  "Postfire Matched",
+  false
 );
 
 /*
 Example: Cloud masking Sentinel-2 imagery
 */
+
+var cloudMasking = require("users/aazuspan/geeScripts:cloudMasking.js");
 
 // Load a Sentinel-2 image (1C or 2A)
 var s2 = ee.Image("COPERNICUS/S2/20190113T190741_20190113T190736_T10TEK");
@@ -147,6 +153,6 @@ Map.addLayer(s2, { bands: ["B4", "B3", "B2"], min: 0, max: 2000 }, "S2", false);
 Map.addLayer(
   cloudMasked,
   { bands: ["B4", "B3", "B2"], min: 0, max: 2000 },
-  "S2",
+  "S2 masked",
   false
 );
