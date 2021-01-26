@@ -2,6 +2,16 @@
 ![Burn Severity example](https://i.imgur.com/wEaOgaQ.png)
 A collection of remote sensing, spatial analysis, and helper tools for Google Earth Engine.
 
+## Table of Contents
+- [Usage](https://github.com/aazuspan/geeScripts#Usage)
+- [Examples](https://github.com/aazuspan/geeScripts#Examples)
+  * [Burn Severity](https://github.com/aazuspan/geeScripts#Burn-Severity)
+  * [Cloud Probability Masking](https://github.com/aazuspan/geeScripts#Cloud-Probability-Masking)
+  * [Heat Load Index](https://github.com/aazuspan/geeScripts#Heat-Load-Index)
+  * [Slope Position](https://github.com/aazuspan/geeScripts#Slope-Position)
+  * [Dark Object Subtraction](https://github.com/aazuspan/geeScripts#Dark-Object-Subtraction)
+- [References](https://github.com/aazuspan/geeScripts#References)
+
 ## Usage
 To import a script, include the following code in your GEE script:
 ```javascript
