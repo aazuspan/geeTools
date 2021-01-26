@@ -1,5 +1,4 @@
 # geeScripts
-![Burn Severity example](https://i.imgur.com/wEaOgaQ.png)
 Remote sensing and spatial analysis tools for Google Earth Engine.
 
 ## Table of Contents
