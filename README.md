@@ -17,7 +17,7 @@ burnSeverity.calculateBurnSeverity( ... );
 
 ## Examples
 ### Burn Severity
-Calculate pre- and post-fire NBR, dNBR, RdNBR (Miller & Thode, 2007), and basal area mortality (Reilly et. al., 2017) using prefire and postfire imagery.
+Calculate pre- and post-fire NBR, dNBR (Key & Benson, 2005), RdNBR (Miller & Thode, 2007), and basal area mortality (Reilly et. al., 2017) using prefire and postfire imagery.
 
 ```javascript
 var burnSeverity = require("users/aazuspan/geeScripts:burnSeverity.js");
@@ -124,3 +124,12 @@ var img = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
 var imgDOS = radCor.darkObjectSubtraction(img, darkObject, 30, 1e13);
 ```
 ![Dark Object Subtraction example](https://i.imgur.com/lVY156s.png)
+
+
+## References
+- Key, C. H., & Benson, N. C. (2005). Landscape assessment: Remote sensing ofseverity, the Normalized Burn Ratio. In D. C. Lutes (Ed.), FIREMON: Fireeffects monitoring and inventory system. General Technical Report, RMRS-GTR-164-CD:LA1-LA51. (pp.) Ogden, UT: USDA Forest Service, Rocky Mountain Research Station.
+- McCune, B. (2007). Improved estimates of incident radiation and heat load using non- parametric regression against topographic variables. Journal of Vegetation Science, 18(5), 751–754. doi:10.1111/j.1654-1103.2007.tb02590.x 
+- Miller, J. D., & Thode, A. E. (2007). Quantifying burn severity in a heterogeneous landscape with a relative version of the delta Normalized Burn Ratio (dNBR). Remote Sensing of Environment, 109(1), 66–80. doi:10.1016/j.rse.2006.12.006
+- Reilly, M. J., Dunn, C. J., Meigs, G. W., Spies, T. A., Kennedy, R. E., Bailey, J. D., & Briggs, K. (2017). Contemporary patterns of fire extent and severity in forests of the Pacific Northwest, USA (1985-2010). Ecosphere, 8(3), e01695. doi:10.1002/ecs2.1695 
+- Weiss, A.D., 2001. Topographic position and landforms analysis. Poster Presentation,
+ESRI Users Conference, San Diego, CA.
