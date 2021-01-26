@@ -1,6 +1,6 @@
 # geeScripts
 ![Burn Severity example](https://i.imgur.com/wEaOgaQ.png)
-A collection of remote sensing, spatial analysis, and helper tools for Google Earth Engine.
+Remote sensing and spatial analysis tools for Google Earth Engine.
 
 ## Table of Contents
 - [Usage](https://github.com/aazuspan/geeScripts#Usage)
