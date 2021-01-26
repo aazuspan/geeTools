@@ -142,4 +142,7 @@ var imgDOS = radCor.darkObjectSubtraction(img, darkObject, 30, 1e13);
 - Miller, J. D., & Thode, A. E. (2007). Quantifying burn severity in a heterogeneous landscape with a relative version of the delta Normalized Burn Ratio (dNBR). Remote Sensing of Environment, 109(1), 66–80. doi:10.1016/j.rse.2006.12.006
 - Reilly, M. J., Dunn, C. J., Meigs, G. W., Spies, T. A., Kennedy, R. E., Bailey, J. D., & Briggs, K. (2017). Contemporary patterns of fire extent and severity in forests of the Pacific Northwest, USA (1985-2010). Ecosphere, 8(3), e01695. doi:10.1002/ecs2.1695 
 - Weiss, A.D., 2001. Topographic position and landforms analysis. Poster Presentation,
-ESRI Users Conference, San Diego, CA.
+ESRI Users Conference, San Diego, CA.  
+
+---
+[Top](https://github.com/aazuspan/geeScripts#geeScripts)
