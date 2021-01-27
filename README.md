@@ -46,8 +46,12 @@ var prefire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
 // L8 imagery one year after the fire
 var postfire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20180701");
 
+// Specify relevant band labels for imagery
+var nir = "B5";
+var swir = "B6";
+
 // Calculate various burn severity metrics
-var severity = fire.calculateBurnSeverity(prefire, postfire, "B5", "B6");
+var severity = fire.calculateBurnSeverity(prefire, postfire, nir, swir);
 ```
 
 ![Burn Severity example](https://i.imgur.com/wEaOgaQ.png)
@@ -59,31 +63,46 @@ Map active burning area or cumulative area burned at customizable time intervals
 ```javascript
 var fire = require("users/aazuspan/geeScripts:fire.js");
 
-// Set the time interval in hours
-var timeDelta = 6;
-
 // Set the date range
 var start = "2020-09-05";
 var end = "2020-09-15";
+
+// Apply a majority filter to smooth the GOES data
+var smooth = true;
+// Use the default kernel (or pass any ee.Kernel)
+var smoothKernel = null;
+// Generate cumulative area burned since start rather than instantaneous area burned.
+var cumulative = true;
+// Set the time interval in hours
+var timeDelta = 6;
 
 // Generate an image collection showing cumulative area burned since the start at each time interval
 var burnedAreaImg = fire.periodicFireBoundaries(
   start,
   end,
   aoi,
-  true,
-  null,
-  true,
+  smooth,
+  smoothKernel,
+  cumulative,
   timeDelta
 );
+
+// Desired pixel size in meters
+var scale = 500;
+var maxPixels = 1e12;
+// Simplify the polygon perimeter to remove stairstep effect and reduce size
+var simplify = true;
+// Max error, in meters, for simplifcation. Higher error will increase the level of simplification
+var maxError = 500;
+
 // Convert the image collection into vector fire perimeters
 var burnedAreaPoly = fire.vectorizeBoundaryCollection(
   collection,
-  500,
+  scale,
   aoi,
-  1e12,
-  true,
-  500
+  maxPixels,
+  simplify,
+  maxError
 );
 ```
 
@@ -152,11 +171,21 @@ var aoi = ee.Geometry.Polygon(
 // Calculate slope in degrees
 var slope = ee.Terrain.slope(srtm);
 
-// Calculate a TPI image using a 300m kernel
-var tpi300 = tpi.tpi(srtm, 300, "square", "meters");
+// Set TPI window parameters. These have a significant impact on output results.
+var radius = 300;
+var shape = "square";
+var units = "meters";
+
+// Calculate a TPI image
+var tpi300 = tpi.tpi(srtm, radius, shape, units);
+
+// Use the default "flat" definition of 5 degrees
+var flat = null;
+// Set the output pixel size in meters
+var scale = 100;
 
 // Reclassify TPI to discrete slope positions
-var slopePosition300 = tpi.slopePosition(tpi300, slope, null, aoi, 100, 1e12);
+var slopePosition300 = tpi.slopePosition(tpi300, slope, flat, aoi, scale);
 ```
 
 ![Slope Position example](https://i.imgur.com/v7ZqBfR.png)
@@ -184,8 +213,13 @@ var darkObject = ee.Geometry.Polygon(
 
 // Load any image
 var img = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
+
+// Pixel size in meters
+var scale = 30;
+var maxPixels = 1e13;
+
 // Use Dark Object Subtraction to correct for atmospheric distortion
-var imgDOS = radCor.darkObjectSubtraction(img, darkObject, 30, 1e13);
+var imgDOS = radCor.darkObjectSubtraction(img, darkObject, scale, maxPixels);
 ```
 
 ![Dark Object Subtraction example](https://i.imgur.com/lVY156s.png)
