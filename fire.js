@@ -71,15 +71,19 @@ exports.periodFireBoundary = function (
 
     // Remap mask to binary fire by selecting good quality fire pixels
     var fireQuality = filtered.select("DQF");
-    // Select the median DQF value for each pixel over the day
-    var medianQuality = fireQuality.reduce(ee.Reducer.median());
-    // Select only high-quality fire pixels
-    var fireMask = medianQuality.eq(0);
+    // Take the minimum DQF value where the minimum (0) represents good quality fire signal. This will cause false
+    // positives for
+    // each data source, but these will be removed when data sources
+    // are combined. Other reducers have unacceptably high false negative
+    // rates (eg. max) and/or are very sensitive to the timeDelta (eg. median
+    // or mode).
+    var fireMask = fireQuality.reduce(ee.Reducer.min()).eq(0);
 
     return fireMask;
   });
-  // Combine GOES16 and GOES17 into one image
-  var combined = ee.ImageCollection(boundaries).reduce(ee.Reducer.max());
+  // Combine GOES16 and GOES17 into one image. Take the min to require
+  // agreement between the data sources and minimize false positives.
+  var combined = ee.ImageCollection(boundaries).reduce(ee.Reducer.min());
 
   if (smooth === true) {
     combined = combined.reduceNeighborhood({
