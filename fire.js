@@ -88,13 +88,30 @@ exports.dayFireBoundary = function (day, region, smooth, smoothKernel) {
   return combined;
 };
 
-// Generate an ImageCollection of daily fire perimeters between a start and end date.
+// Add a binary mask to the last image in a collection of binary masks to get cumulative presence over a time series
+var accumulateMask = function (next, list) {
+  // Select the last image of the current collection
+  var previous = ee.Image(ee.List(list).get(-1)).unmask();
+  next = next.unmask();
+
+  // Add the previous presence to the current presence
+  var accumulated = next.add(previous).gt(0);
+  accumulated = accumulated.selfMask();
+
+  accumulated = accumulated.set({ date: next.get("date") });
+
+  return ee.List(list).add(accumulated);
+};
+
+// Generate an ImageCollection of daily fire perimeters between a start and end date. If cumulative, images will be
+// cumulate area burned between start date and current date. If not, images will be area burned in that day only.
 exports.dailyFireBoundaries = function (
   start,
   end,
   region,
   smooth,
-  smoothKernel
+  smoothKernel,
+  cumulative
 ) {
   smoothKernel = smoothKernel
     ? smoothKernel
@@ -114,6 +131,16 @@ exports.dailyFireBoundaries = function (
       return exports.dayFireBoundary(day, region, smooth, smoothKernel);
     })
   );
+
+  if (cumulative === true) {
+    // Create a placeholder element
+    var first = ee.List([ee.Image(0).rename("fire_mask").int()]);
+    // Iteratively add all previous boundaries to each boundary to get cumulative area burned for each day
+    var cumulative = ee.List(dayCollection.iterate(accumulateMask, first));
+    // Remove the first placeholder element
+    cumulative = ee.ImageCollection(cumulative.slice(1));
+    dayCollection = cumulative;
+  }
 
   return dayCollection;
 };
