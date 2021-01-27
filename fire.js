@@ -45,28 +45,38 @@ exports.calculateBurnSeverity = function (pre, post, NIR, SWIR) {
   return severityMetrics;
 };
 
-// Generate a fire mask by combining fire masks from GOES16 and GOES17 over one time period.
-// Optionally use a majority filter to smooth the boundary. Time delta in milliseconds. Note that different time deltas
-// will affect the resulting fire perimeter as more observations will increase the likelihood of false positive pixels.
-// If the time delta is smaller than the return interval for the imagery, redundant images with no change will be
-// included.
+/**
+ * Generate a single image mask of active fire between a start and end time using GOES16 and GOES17 data.
+ * @param {ee.Date} start The starting time.
+ * @param {ee.Date} end The ending time.
+ * @param {ee.Geometry} region The area to search for fire perimeters.
+ * @param {boolean} smooth If true, a majority filter will be used to smooth the low-resolution pixels.
+ * @param {ee.Kernel} smoothKernel If smoothing, the kernel used to perform the majority filter. If null, a 2000 meter
+ * normalized circular kernel will be used.
+ * @return {ee.Image} A binary mask where 1 is active fire within the time period.
+ */
 exports.periodFireBoundary = function (
-  time,
+  start,
+  end,
   region,
   smooth,
-  smoothKernel,
-  timeDelta
+  smoothKernel
 ) {
+  smoothKernel = smoothKernel
+    ? smoothKernel
+    : ee.Kernel.circle(2000, "meters", true);
+
+  start = ee.Date(start);
+  end = ee.Date(end);
+
   var goes16 = ee.ImageCollection("NOAA/GOES/16/FDCF");
   var goes17 = ee.ImageCollection("NOAA/GOES/17/FDCF");
-
-  var date = ee.Date(time);
 
   // Generate boundaries from GOES16 and GOES17 separately
   var boundaries = ee.List([goes16, goes17]).map(function (collection) {
     var filtered = ee
       .ImageCollection(collection)
-      .filterDate(date, date.advance(timeDelta, "hours"))
+      .filterDate(start, end)
       .filterBounds(region);
 
     // Remap mask to binary fire by selecting good quality fire pixels
@@ -90,15 +100,17 @@ exports.periodFireBoundary = function (
   }
 
   // Mask and store the date as a property
-  combined = combined
-    .selfMask()
-    .set({ date: ee.Date(time) })
-    .rename("fire_mask");
+  combined = combined.selfMask().set({ date: start }).rename("fire_mask");
 
   return combined;
 };
 
-// Add a binary mask to the last image in a collection of binary masks to get cumulative presence over a time series
+/**
+ * Add a binary mask to the last image in a list of binary masks. Used for iterating over an image collection.
+ * @param {ee.Image} next A binary mask to accumulate with past masks.
+ * @param {ee.List of ee.Image} list A list of past masks.
+ * @return {ee.List of ee.Image} The input list with the next accumulated mask added.
+ */
 var accumulateMask = function (next, list) {
   // Select the last image of the current collection
   var previous = ee.Image(ee.List(list).get(-1)).unmask();
@@ -143,8 +155,12 @@ exports.periodicFireBoundaries = function (
 
   var periodCollection = ee.ImageCollection.fromImages(
     periodList.map(function (time) {
+      var start = time;
+      var end = ee.Date(time).advance(timeDelta, "hours");
+
       return exports.periodFireBoundary(
-        time,
+        start,
+        end,
         region,
         smooth,
         smoothKernel,
@@ -168,7 +184,19 @@ exports.periodicFireBoundaries = function (
   return periodCollection;
 };
 
-// Convert a binary fire boundary image to a polygon.
+/**
+ * Convert a binary mask image into a Feature Collection. The date field from the image will be transferred to the
+ * features.
+ * @param {ee.Image} img A binary mask to convert into polygons.
+ * @param {number} scale The desired pixel size, in meters, of the input image.
+ * @param {ee.Geometry} region The area to containing the image to generate polygons from.
+ * @param {number, default 1e13} maxPixels The maximum number of pixels to sample when converting the image to vector.
+ * @param {boolean, default false} simplify If true, ee.Geometry.simplify() will be run on the vectorized boundary to
+ * remove stairstepping.
+ * @param {number} maxError If simplifying, the maximum error introduced by simplification, in meters. Higher values
+ * will lead to greater simplification.
+ * @return {ee.FeatureCollection} A collection of polygons representing the binary mask.
+ */
 exports.vectorizeBoundary = function (
   img,
   scale,
@@ -196,7 +224,19 @@ exports.vectorizeBoundary = function (
   return poly;
 };
 
-// Convert an ImageCollection of binary Images to a FeatureCollection of polygons
+/**
+ * Convert a collection of binary mask images into a Feature Collection. The date field from the image will be
+ * transferred from each image to each corresponding feature.
+ * @param {ee.ImageCollection} collection A collection of binary masks to convert into polygons.
+ * @param {number} scale The desired pixel size, in meters, of the input image.
+ * @param {ee.Geometry} region The area to containing the images to generate polygons from.
+ * @param {number, default 1e13} maxPixels The maximum number of pixels to sample when converting the images to vectors.
+ * @param {boolean, default false} simplify If true, ee.Geometry.simplify() will be run on the vectorized boundaries to
+ * remove stairstepping.
+ * @param {number} maxError If simplifying, the maximum error introduced by simplification, in meters. Higher values
+ * will lead to greater simplification.
+ * @return {ee.FeatureCollection} A collection of polygons representing the binary masks.
+ */
 exports.vectorizeBoundaryCollection = function (
   collection,
   scale,
