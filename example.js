@@ -151,3 +151,30 @@ Map.addLayer(
   "S2 masked",
   false
 );
+
+/*
+Example: Fire perimeter detection
+*/
+
+// Select an area near the 2020 Lionshead and Beachie Creek fires
+var aoi = ee.Geometry.Point([-122.12284375769744, 44.729350689066244]).buffer(
+  50000
+);
+
+// Select a date range to generate daily fire perimeters for
+var start = "2020-09-06";
+var end = "2020-09-09";
+
+// Use GOES imagery to generate a daily fire area ImageCollection
+var collection = fire.dailyFireBoundaries(start, end, aoi, true);
+// Convert the ImageCollection to a FeatureCollection of daily fire perimeters
+var perimeters = fire.vectorizeBoundaryCollection(
+  collection,
+  250,
+  aoi,
+  1e12,
+  true,
+  500
+);
+
+Map.addLayer(perimeters, {}, "Fire perimeters", false);
