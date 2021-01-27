@@ -18,10 +18,10 @@ Remote sensing and spatial analysis tools for Google Earth Engine.
 
 ## Usage
 
-To import a script, include the following code in your GEE script:
+To import a module, include the following code in your GEE script:
 
 ```javascript
-var foo = require("users/aazuspan/geeScripts:{script name}");
+var foo = require("users/aazuspan/geeScripts:{module name}");
 foo.bar();
 ```
 
