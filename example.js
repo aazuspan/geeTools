@@ -166,7 +166,7 @@ var start = "2020-09-06";
 var end = "2020-09-09";
 
 // Use GOES imagery to generate a daily fire area ImageCollection
-var collection = fire.dailyFireBoundaries(start, end, aoi, true);
+var collection = fire.periodicFireBoundaries(start, end, aoi, true);
 // Convert the ImageCollection to a FeatureCollection of daily fire perimeters
 var perimeters = fire.vectorizeBoundaryCollection(
   collection,

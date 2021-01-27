@@ -45,19 +45,28 @@ exports.calculateBurnSeverity = function (pre, post, NIR, SWIR) {
   return severityMetrics;
 };
 
-// Generate a fire mask by combining fire masks from GOES16 and GOES17 over one day.
-// Optionally use a majority filter to smooth the boundary.
-exports.dayFireBoundary = function (day, region, smooth, smoothKernel) {
+// Generate a fire mask by combining fire masks from GOES16 and GOES17 over one time period.
+// Optionally use a majority filter to smooth the boundary. Time delta in milliseconds. Note that different time deltas
+// will affect the resulting fire perimeter as more observations will increase the likelihood of false positive pixels.
+// If the time delta is smaller than the return interval for the imagery, redundant images with no change will be
+// included.
+exports.periodFireBoundary = function (
+  time,
+  region,
+  smooth,
+  smoothKernel,
+  timeDelta
+) {
   var goes16 = ee.ImageCollection("NOAA/GOES/16/FDCF");
   var goes17 = ee.ImageCollection("NOAA/GOES/17/FDCF");
 
-  var date = ee.Date(day);
+  var date = ee.Date(time);
 
   // Generate boundaries from GOES16 and GOES17 separately
-  var dayBoundaries = ee.List([goes16, goes17]).map(function (collection) {
+  var boundaries = ee.List([goes16, goes17]).map(function (collection) {
     var filtered = ee
       .ImageCollection(collection)
-      .filterDate(date, date.advance(1, "day"))
+      .filterDate(date, date.advance(timeDelta / 1000, "seconds"))
       .filterBounds(region);
 
     // Remap mask to binary fire by selecting good quality fire pixels
@@ -70,7 +79,7 @@ exports.dayFireBoundary = function (day, region, smooth, smoothKernel) {
     return fireMask;
   });
   // Combine GOES16 and GOES17 into one image
-  var combined = ee.ImageCollection(dayBoundaries).reduce(ee.Reducer.max());
+  var combined = ee.ImageCollection(boundaries).reduce(ee.Reducer.max());
 
   if (smooth === true) {
     combined = combined.reduceNeighborhood({
@@ -82,7 +91,7 @@ exports.dayFireBoundary = function (day, region, smooth, smoothKernel) {
   // Mask and store the date as a property
   combined = combined
     .selfMask()
-    .set({ date: ee.Date(day) })
+    .set({ date: ee.Date(time) })
     .rename("fire_mask");
 
   return combined;
@@ -103,46 +112,55 @@ var accumulateMask = function (next, list) {
   return ee.List(list).add(accumulated);
 };
 
-// Generate an ImageCollection of daily fire perimeters between a start and end date. If cumulative, images will be
-// cumulate area burned between start date and current date. If not, images will be area burned in that day only.
-exports.dailyFireBoundaries = function (
+// Generate an ImageCollection of fire perimeters at a regular interval between a start and end date. If cumulative,
+// images will be cumulative area burned between start date and current date. If not, images will be area burned in time
+// period only.
+exports.periodicFireBoundaries = function (
   start,
   end,
   region,
   smooth,
   smoothKernel,
-  cumulative
+  cumulative,
+  timeDelta
 ) {
   smoothKernel = smoothKernel
     ? smoothKernel
     : ee.Kernel.circle(2000, "meters", true);
 
-  // Milliseconds per day
-  var DAY = 86400000;
+  // Default to using whole day intervals (milliseconds)
+  var timeDelta = timeDelta ? timeDelta : 86400000;
+
   // Millisecond epoch time of each day in the time series
-  var dayList = ee.List.sequence(
+  var periodList = ee.List.sequence(
     ee.Date(start).millis(),
     ee.Date(end).millis(),
-    DAY
+    timeDelta
   );
 
-  var dayCollection = ee.ImageCollection.fromImages(
-    dayList.map(function (day) {
-      return exports.dayFireBoundary(day, region, smooth, smoothKernel);
+  var periodCollection = ee.ImageCollection.fromImages(
+    periodList.map(function (time) {
+      return exports.periodFireBoundary(
+        time,
+        region,
+        smooth,
+        smoothKernel,
+        timeDelta
+      );
     })
   );
 
   if (cumulative === true) {
     // Create a placeholder element
     var first = ee.List([ee.Image(0).rename("fire_mask").int()]);
-    // Iteratively add all previous boundaries to each boundary to get cumulative area burned for each day
-    var cumulative = ee.List(dayCollection.iterate(accumulateMask, first));
+    // Iteratively add all previous boundaries to each boundary to get cumulative area burned for each time period
+    var cumulative = ee.List(periodCollection.iterate(accumulateMask, first));
     // Remove the first placeholder element
     cumulative = ee.ImageCollection(cumulative.slice(1));
-    dayCollection = cumulative;
+    periodCollection = cumulative;
   }
 
-  return dayCollection;
+  return periodCollection;
 };
 
 // Convert a binary fire boundary image to a polygon.
