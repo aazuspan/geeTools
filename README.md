@@ -59,17 +59,32 @@ Map active burning area or cumulative area burned at customizable time intervals
 ```javascript
 var fire = require("users/aazuspan/geeScripts:fire.js");
 
-// Set the time interval in milliseconds (in this case, 6 hours)
-var timeDelta = 6 * 60 * 60 * 1000;
+// Set the time interval in hours
+var timeDelta = 6;
 
 // Set the date range
 var start = "2020-09-05";
 var end = "2020-09-15";
 
 // Generate an image collection showing cumulative area burned since the start at each time interval
-var burnedAreaImg = fire.periodicFireBoundaries(start, end, aoi, true, null, true, timeDelta);
+var burnedAreaImg = fire.periodicFireBoundaries(
+  start,
+  end,
+  aoi,
+  true,
+  null,
+  true,
+  timeDelta
+);
 // Convert the image collection into vector fire perimeters
-var burnedAreaPoly = fire.vectorizeBoundaryCollection(collection, 500, aoi, 1e12, true, 500);
+var burnedAreaPoly = fire.vectorizeBoundaryCollection(
+  collection,
+  500,
+  aoi,
+  1e12,
+  true,
+  500
+);
 ```
 
 ![Fire perimeter example](https://i.imgur.com/HtAJPle.gif)

@@ -66,17 +66,14 @@ exports.periodFireBoundary = function (
   var boundaries = ee.List([goes16, goes17]).map(function (collection) {
     var filtered = ee
       .ImageCollection(collection)
-      .filterDate(date, date.advance(timeDelta / 1000, "seconds"))
+      .filterDate(date, date.advance(timeDelta, "hours"))
       .filterBounds(region);
 
     // Remap mask to binary fire by selecting good quality fire pixels
     var fireQuality = filtered.select("DQF");
     // Take the minimum DQF value where the minimum (0) represents good quality fire signal. This will cause false
-    // positives for
-    // each data source, but these will be removed when data sources
-    // are combined. Other reducers have unacceptably high false negative
-    // rates (eg. max) and/or are very sensitive to the timeDelta (eg. median
-    // or mode).
+    // positives for each data source, but these will be removed when data sources are combined. Other reducers have
+    // unacceptably high false negative rates (eg. max) and/or are very sensitive to the timeDelta (eg. median or mode).
     var fireMask = fireQuality.reduce(ee.Reducer.min()).eq(0);
 
     return fireMask;
@@ -132,14 +129,16 @@ exports.periodicFireBoundaries = function (
     ? smoothKernel
     : ee.Kernel.circle(2000, "meters", true);
 
-  // Default to using whole day intervals (milliseconds)
-  var timeDelta = timeDelta ? timeDelta : 86400000;
+  // Default to using whole day intervals (hours)
+  timeDelta = timeDelta ? timeDelta : 24;
+  // Convert time delta in hours to milliseconds
+  var msDelta = timeDelta * 3.6e6;
 
   // Millisecond epoch time of each day in the time series
   var periodList = ee.List.sequence(
     ee.Date(start).millis(),
     ee.Date(end).millis(),
-    timeDelta
+    msDelta
   );
 
   var periodCollection = ee.ImageCollection.fromImages(
@@ -158,10 +157,12 @@ exports.periodicFireBoundaries = function (
     // Create a placeholder element
     var first = ee.List([ee.Image(0).rename("fire_mask").int()]);
     // Iteratively add all previous boundaries to each boundary to get cumulative area burned for each time period
-    var cumulative = ee.List(periodCollection.iterate(accumulateMask, first));
+    var cumulativeBoundary = ee.List(
+      periodCollection.iterate(accumulateMask, first)
+    );
     // Remove the first placeholder element
-    cumulative = ee.ImageCollection(cumulative.slice(1));
-    periodCollection = cumulative;
+    cumulativeBoundary = ee.ImageCollection(cumulativeBoundary.slice(1));
+    periodCollection = cumulativeBoundary;
   }
 
   return periodCollection;
