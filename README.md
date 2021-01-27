@@ -2,11 +2,14 @@
 
 Remote sensing and spatial analysis tools for Google Earth Engine.
 
+![Fire Perimeter example](https://i.imgur.com/yzDB6Ii.gif)
+
 ## Table of Contents
 
 - [Usage](https://github.com/aazuspan/geeScripts#Usage)
 - [Examples](https://github.com/aazuspan/geeScripts#Examples)
   - [Burn Severity](https://github.com/aazuspan/geeScripts#Burn-Severity)
+  - [Fire Perimeter Detection](https://github.com/aazuspan/geeScripts#Fire-Perimeter-Detection)
   - [Cloud Probability Masking](https://github.com/aazuspan/geeScripts#Cloud-Probability-Masking)
   - [Heat Load Index](https://github.com/aazuspan/geeScripts#Heat-Load-Index)
   - [Slope Position](https://github.com/aazuspan/geeScripts#Slope-Position)
@@ -48,6 +51,28 @@ var severity = fire.calculateBurnSeverity(prefire, postfire, "B5", "B6");
 ```
 
 ![Burn Severity example](https://i.imgur.com/wEaOgaQ.png)
+
+### Fire Perimeter Detection
+
+Map active burning area or cumulative area burned at customizable time intervals over a time period, such as area burned every 6 hours over 10 days. This implementation uses GOES-16 and GOES-17 imagery, so fire dates are restricted based on availability of that data.
+
+```javascript
+var fire = require("users/aazuspan/geeScripts:fire.js");
+
+// Set the time interval in milliseconds (in this case, 6 hours)
+var timeDelta = 6 * 60 * 60 * 1000;
+
+// Set the date range
+var start = "2020-09-05";
+var end = "2020-09-15";
+
+// Generate an image collection showing cumulative area burned since the start at each time interval
+var burnedAreaImg = fire.periodicFireBoundaries(start, end, aoi, true, null, true, timeDelta);
+// Convert the image collection into vector fire perimeters
+var burnedAreaPoly = fire.vectorizeBoundaryCollection(collection, 500, aoi, 1e12, true, 500);
+```
+
+![Fire perimeter example](https://i.imgur.com/HtAJPle.gif)
 
 ### Cloud Probability Masking
 
