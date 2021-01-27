@@ -125,9 +125,22 @@ var accumulateMask = function (next, list) {
   return ee.List(list).add(accumulated);
 };
 
-// Generate an ImageCollection of fire perimeters at a regular interval between a start and end date. If cumulative,
-// images will be cumulative area burned between start date and current date. If not, images will be area burned in time
-// period only.
+/**
+ * Generate a collection of image masks of active fire at a regular interval between a start and end time using GOES16
+ * and GOES17 data. Masks can represent either instantaneous fire area within each interval or cumulative fire area
+ * between the start time and the current interval.
+ * @param {ee.Date} start The starting time.
+ * @param {ee.Date} end The ending time.
+ * @param {ee.Geometry} region The area to search for fire perimeters.
+ * @param {boolean} smooth If true, a majority filter will be used to smooth the low-resolution pixels.
+ * @param {ee.Kernel} smoothKernel If smoothing, the kernel used to perform the majority filter. If null, a 2000 meter
+ * normalized circular kernel will be used.
+ * @param {boolean} cumulative If true, each mask in the collection will represent cumulative area burned since the
+ * start time. If false, each mask in the collection will represent only the area burned within that time period.
+ * @param {number} timeDelta The length of each interval, in hours, to generate fire boundaries for.
+ * @return {ee.ImageCollection} A collection of binary masks where 1 is active fire or cumulative area burned within
+ * each time period.
+ */
 exports.periodicFireBoundaries = function (
   start,
   end,
