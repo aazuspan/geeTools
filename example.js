@@ -1,7 +1,7 @@
 /*
 Example: Calculating burn severity metrics for the 2017 Oak Fire
 */
-var fire = require("users/aazuspan/geeScripts:fire.js");
+var fire = require("users/aazuspan/geeTools:fire.js");
 
 // L8 imagery prior to the fire
 var prefire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
@@ -20,7 +20,7 @@ Map.addLayer(
 /*
 Example: Calculating HLI from SRTM data.
 */
-var hli = require("users/aazuspan/geeScripts:HLI.js");
+var hli = require("users/aazuspan/geeTools:HLI.js");
 var srtm = ee.Image("CGIAR/SRTM90_V4");
 var h = hli.hli(srtm);
 
@@ -29,7 +29,7 @@ Map.addLayer(h, { min: 0.5, max: 1 }, "HLI", false);
 /*
 Example: Calculating TPI and slope position
 */
-var tpi = require("users/aazuspan/geeScripts:TPI.js");
+var tpi = require("users/aazuspan/geeTools:TPI.js");
 
 var aoi = ee.Geometry.Polygon(
   [
@@ -59,7 +59,7 @@ Map.addLayer(slopePosition300, { min: 1, max: 6 }, "Slope Position", false);
 Example: Applying radiometric correction
 */
 
-var radCor = require("users/aazuspan/geeScripts:radiometricCorrection.js");
+var radCor = require("users/aazuspan/geeTools:radiometricCorrection.js");
 
 // Identify a reference dark object, such as deep water
 var darkObject = ee.Geometry.Polygon(
@@ -133,7 +133,7 @@ Map.addLayer(
 Example: Cloud masking Sentinel-2 imagery
 */
 
-var cloudMasking = require("users/aazuspan/geeScripts:cloudMasking.js");
+var cloudMasking = require("users/aazuspan/geeTools:cloudMasking.js");
 
 // Load a Sentinel-2 image (1C or 2A)
 var s2 = ee.Image("COPERNICUS/S2/20190113T190741_20190113T190736_T10TEK");

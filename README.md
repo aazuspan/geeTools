@@ -1,4 +1,4 @@
-# geeScripts
+# geeTools
 
 Remote sensing and spatial analysis tools for Google Earth Engine.
 
@@ -6,29 +6,29 @@ Remote sensing and spatial analysis tools for Google Earth Engine.
 
 ## Table of Contents
 
-- [Usage](https://github.com/aazuspan/geeScripts#Usage)
-- [Examples](https://github.com/aazuspan/geeScripts#Examples)
-  - [Burn Severity](https://github.com/aazuspan/geeScripts#Burn-Severity)
-  - [Fire Perimeter Detection](https://github.com/aazuspan/geeScripts#Fire-Perimeter-Detection)
-  - [Cloud Probability Masking](https://github.com/aazuspan/geeScripts#Cloud-Probability-Masking)
-  - [Heat Load Index](https://github.com/aazuspan/geeScripts#Heat-Load-Index)
-  - [Slope Position](https://github.com/aazuspan/geeScripts#Slope-Position)
-  - [Dark Object Subtraction](https://github.com/aazuspan/geeScripts#Dark-Object-Subtraction)
-- [References](https://github.com/aazuspan/geeScripts#References)
+- [Usage](https://github.com/aazuspan/geeTools#Usage)
+- [Examples](https://github.com/aazuspan/geeTools#Examples)
+  - [Burn Severity](https://github.com/aazuspan/geeTools#Burn-Severity)
+  - [Fire Perimeter Detection](https://github.com/aazuspan/geeTools#Fire-Perimeter-Detection)
+  - [Cloud Probability Masking](https://github.com/aazuspan/geeTools#Cloud-Probability-Masking)
+  - [Heat Load Index](https://github.com/aazuspan/geeTools#Heat-Load-Index)
+  - [Slope Position](https://github.com/aazuspan/geeTools#Slope-Position)
+  - [Dark Object Subtraction](https://github.com/aazuspan/geeTools#Dark-Object-Subtraction)
+- [References](https://github.com/aazuspan/geeTools#References)
 
 ## Usage
 
 To import a module, include the following code in your GEE script:
 
 ```javascript
-var foo = require("users/aazuspan/geeScripts:{module name}");
+var foo = require("users/aazuspan/geeTools:{module name}");
 foo.bar();
 ```
 
 For example:
 
 ```javascript
-var fire = require("users/aazuspan/geeScripts:fire.js")
+var fire = require("users/aazuspan/geeTools:fire.js")
 fire.calculateBurnSeverity( ... );
 ```
 
@@ -39,7 +39,7 @@ fire.calculateBurnSeverity( ... );
 Calculate pre- and post-fire NBR, dNBR (Key & Benson, 2005), RdNBR (Miller & Thode, 2007), and basal area mortality (Reilly et. al., 2017) using prefire and postfire imagery.
 
 ```javascript
-var fire = require("users/aazuspan/geeScripts:fire.js");
+var fire = require("users/aazuspan/geeTools:fire.js");
 
 // L8 imagery prior to the fire
 var prefire = ee.Image("LANDSAT/LC08/C01/T1_TOA/LC08_046031_20170628");
@@ -61,7 +61,7 @@ var severity = fire.calculateBurnSeverity(prefire, postfire, nir, swir);
 Map active burning area or cumulative area burned at customizable time intervals over a time period, such as area burned every 6 hours over 10 days. This implementation uses GOES-16 and GOES-17 imagery, so fire dates are restricted based on availability of that data.
 
 ```javascript
-var fire = require("users/aazuspan/geeScripts:fire.js");
+var fire = require("users/aazuspan/geeTools:fire.js");
 
 // Set the date range
 var start = "2020-09-05";
@@ -113,7 +113,7 @@ var burnedAreaPoly = fire.vectorizeBoundaryCollection(
 Use cloud probability data to mask clouds in imagery.
 
 ```javascript
-var cloudMasking = require("users/aazuspan/geeScripts:cloudMasking.js");
+var cloudMasking = require("users/aazuspan/geeTools:cloudMasking.js");
 
 // Load a Sentinel-2 image (1C or 2A)
 var s2 = ee.Image("COPERNICUS/S2/20190113T190741_20190113T190736_T10TEK");
@@ -133,7 +133,7 @@ var cloudMasked = cloudMasking.probabilityCloudMask(s2, prob);
 Calculate Heat Load Index (HLI) from elevation (McCune, 2007).
 
 ```javascript
-var hli = require("users/aazuspan/geeScripts:HLI.js");
+var hli = require("users/aazuspan/geeTools:HLI.js");
 
 // Load elevation data
 var srtm = ee.Image("CGIAR/SRTM90_V4");
@@ -149,7 +149,7 @@ var h = hli.hli(srtm);
 Calculate TPI and slope position from elevation (Weiss, 2001).
 
 ```javascript
-var tpi = require("users/aazuspan/geeScripts:TPI.js");
+var tpi = require("users/aazuspan/geeTools:TPI.js");
 
 // Load elevation data
 var srtm = ee.Image("CGIAR/SRTM90_V4");
@@ -195,7 +195,7 @@ var slopePosition300 = tpi.slopePosition(tpi300, slope, flat, aoi, scale);
 Use dark object subtraction (DOS) to perform radiometric normalization and atmospheric correction.
 
 ```javascript
-var radCor = require("users/aazuspan/geeScripts:radiometricCorrection.js");
+var radCor = require("users/aazuspan/geeTools:radiometricCorrection.js");
 
 // Identify a reference dark object, such as deep water
 var darkObject = ee.Geometry.Polygon(
@@ -235,4 +235,4 @@ var imgDOS = radCor.darkObjectSubtraction(img, darkObject, scale, maxPixels);
 
 ---
 
-[Top](https://github.com/aazuspan/geeScripts#geeScripts)
+[Top](https://github.com/aazuspan/geeTools#geeTools)

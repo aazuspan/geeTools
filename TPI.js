@@ -1,4 +1,4 @@
-var utils = require("users/aazuspan/geeScripts:utils.js");
+var utils = require("users/aazuspan/geeTools:utils.js");
 
 // Calculate topographic position index based on a DEM image, following Weiss 2001.
 // Radius, window_shape, and units define the TPI kernel, and are passed to ee.Image.focal_mean

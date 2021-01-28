@@ -1,4 +1,4 @@
-var utils = require("users/aazuspan/geeScripts:utils.js");
+var utils = require("users/aazuspan/geeTools:utils.js");
 
 /**
  * Calculate McCune and Keon 2002 Heat Load Index (HLI) with corrected coefficients from

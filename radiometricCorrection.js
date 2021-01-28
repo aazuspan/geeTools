@@ -1,4 +1,4 @@
-var utils = require("users/aazuspan/geeScripts:utils.js");
+var utils = require("users/aazuspan/geeTools:utils.js");
 
 /**
  * Apply band-wise radiometric correction to remote sensing imagery using the
