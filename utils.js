@@ -64,3 +64,68 @@ exports.itemInList = function (item, list) {
   }
   return false;
 };
+
+/**
+ * Swap given parameters into a dictionary of default parameters. Given parameters can be null or false and will still
+ * be swapped. Given parameters not included in the default set will be added, but I'm not sure why you'd want to do
+ * that.
+ * @param {Object} def A dictionary of default parameters.
+ * @param {Object} given A dictionary of given parameters to substitue for defaults.
+ * @return {Object} The default dictionary with values from the given dictionary.
+ */
+exports.updateParameters = function (def, given) {
+  if (given) {
+    for (var prop in given) {
+      def[prop] = given[prop];
+    }
+  }
+  return def;
+};
+
+/**
+ * Combine a list of images into a single multi-band image. This is a convenience function over repeatedly calling
+ * addBands for each image you want to combine.
+ * @param {ee.List} imgList A list of images to combine. Images can be single or multiband.
+ * @param {Object} [optionalParameters] A dictionary of optional parameters to override defaults.
+ * @param {boolean, default true} [optionalParameters.prefix] If true, all band names will be prefixed with the list
+ * index of the image it came from. This allows combining images with identical band names. If false, original band
+ * names will be kept. If there are duplicate band names, an error will be thrown.
+ * @param {ee.Dictionary, default null} [optionalParameters.props] Properties to store in the combined image. If null,
+ * properties will be taken from the first image in imgList and the result will be identical to using addBands.
+ * @return {ee.Image} An image with the bands of all images in imgList
+ */
+exports.combineImages = function (imgList, optionalParameters) {
+  var first = ee.Image(ee.List(imgList).get(0));
+
+  // Default parameters
+  var params = {
+    prefix: true,
+    props: first.toDictionary(first.propertyNames()),
+  };
+
+  params = exports.updateParameters(params, optionalParameters);
+
+  // Convert the list to a collection and collapse the collection into a multiband image.
+  // Rename bands to match original band names.
+  var combined = ee.ImageCollection
+    // Convert the image list to a collection
+    .fromImages(imgList)
+    // Convert the collection to a multiband image
+    .toBands()
+    // Store properties
+    .set(params.props);
+
+  if (params.prefix === false) {
+    // Grab a 1D list of original band names
+    var bandNames = ee
+      .List(
+        imgList.map(function (img) {
+          return img.bandNames();
+        })
+      )
+      .flatten();
+    combined = combined.rename(bandNames);
+  }
+
+  return combined;
+};
