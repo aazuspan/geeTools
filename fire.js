@@ -100,7 +100,9 @@ exports.periodFireBoundary = function (
   }
 
   // Mask and store the date as a property
-  combined = combined.selfMask().set({ date: start }).rename("fire_mask");
+  combined = combined.selfMask().rename("fire_mask");
+
+  combined = setImageMetadata(combined, start, end);
 
   return combined;
 };
@@ -120,9 +122,35 @@ var accumulateMask = function (next, list) {
   var accumulated = next.add(previous).gt(0);
   accumulated = accumulated.selfMask();
 
-  accumulated = accumulated.set({ date: next.get("date") });
+  // Because images are accumulated over the time series, they will all have the
+  // same start date.
+  var start = ee.Image(ee.List(list).get(0)).get("start_date");
+  var end = next.get("end_date");
+
+  accumulated = setImageMetadata(accumulated, start, end);
 
   return ee.List(list).add(accumulated);
+};
+
+/**
+ * Set the title and date metadata for a fire mask image. Image titles use the
+ * end date so that accumulated images have unique titles.
+ * @param {ee.Image} img A binary fire mask.
+ * @param {ee.Date} startDate The starting date for the fire mask.
+ * @return {ee.Image} The binary fire mask with an ID and dates set.
+ */
+var setImageMetadata = function (img, startDate, endDate) {
+  var dateString = ee.Date(endDate).format("yyyy_MM_dd_HH:mm:ss");
+  var imgName = ee.String("FireMask/").cat(dateString);
+
+  return img.set(
+    "system:id",
+    imgName,
+    "start_date",
+    startDate,
+    "end_date",
+    endDate
+  );
 };
 
 /**
@@ -184,7 +212,15 @@ exports.periodicFireBoundaries = function (
 
   if (cumulative === true) {
     // Create a placeholder element
-    var first = ee.List([ee.Image(0).rename("fire_mask").int()]);
+    var first = ee.List([
+      ee
+        .Image(0)
+        .rename("fire_mask")
+        .int()
+        // Store the start date since it will be used for all accumulated images.
+        .set("start_date", ee.Date(start)),
+    ]);
+
     // Iteratively add all previous boundaries to each boundary to get cumulative area burned for each time period
     var cumulativeBoundary = ee.List(
       periodCollection.iterate(accumulateMask, first)
@@ -193,6 +229,26 @@ exports.periodicFireBoundaries = function (
     cumulativeBoundary = ee.ImageCollection(cumulativeBoundary.slice(1));
     periodCollection = cumulativeBoundary;
   }
+
+  var dateString = ee.Date(end).format("yyyy_MM_dd_HH:mm:ss");
+  var collectionName = ee.String("FireMaskCollection/").cat(dateString);
+
+  periodCollection = periodCollection.set(
+    "system:id",
+    collectionName,
+    "start_date",
+    start,
+    "end_date",
+    end,
+    "cumulative",
+    cumulative,
+    "smoothed",
+    smooth,
+    "region",
+    region,
+    "time_delta",
+    timeDelta
+  );
 
   return periodCollection;
 };
