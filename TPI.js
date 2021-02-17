@@ -2,38 +2,42 @@ var utils = require("users/aazuspan/geeTools:utils.js");
 
 // Calculate topographic position index based on a DEM image, following Weiss 2001.
 // Radius, window_shape, and units define the TPI kernel, and are passed to ee.Image.focal_mean
-exports.tpi = function (dem, radius, window_shape, units) {
+exports.tpi = function (dem, optionalParameters) {
+  // Default parameters
+  var params = {
+    radius: 300,
+    windowShape: "circle",
+    units: "meters",
+  };
+
+  params = utils.updateParameters(params, optionalParameters);
+
   dem = dem.double();
   var r = dem
-    .subtract(dem.focal_mean(radius, window_shape, units))
+    .subtract(dem.focal_mean(params.radius, params.windowShape, params.units))
     .add(0.5)
-    .int();
+    .int()
+    .rename("TPI");
   return r;
 };
 
 // Reclassify a continuous TPI image into slope positions, following Weiss 2001
-exports.slopePosition = function (
-  tpi,
-  slope,
-  flat_degrees,
-  region,
-  scale,
-  maxPixels
-) {
-  // Default "flat" is 5 degrees
-  flat_degrees = flat_degrees || 5;
+exports.slopePosition = function (tpi, slope, region, optionalParameters) {
+  var params = {
+    flatDegrees: 5,
+    scale: null,
+    maxPixels: 1e12,
+  };
 
-  if (utils.isMissing(maxPixels)) {
-    maxPixels = 1e12;
-  }
+  params = utils.updateParameters(params, optionalParameters);
 
   // Calculate the TPI standard deviation
   var sd = tpi
     .reduceRegion({
       reducer: ee.Reducer.stdDev(),
       geometry: region,
-      scale: scale,
-      maxPixels: maxPixels,
+      scale: params.scale,
+      maxPixels: params.maxPixels,
     })
     .getNumber(tpi.bandNames().get(0));
 
@@ -48,20 +52,21 @@ exports.slopePosition = function (
     .where(
       tpi
         .gt(sd.multiply(-0.5))
-        .and(tpi.lt(sd.multiply(0.5)).and(slope.gt(flat_degrees))),
+        .and(tpi.lt(sd.multiply(0.5)).and(slope.gt(params.flatDegrees))),
       3
     )
     // Flat slope
     .where(
       tpi
         .gte(sd.multiply(-0.5))
-        .and(tpi.lte(sd.multiply(0.5)).and(slope.lte(flat_degrees))),
+        .and(tpi.lte(sd.multiply(0.5)).and(slope.lte(params.flatDegrees))),
       4
     )
     // Lower slope
     .where(tpi.gte(sd.multiply(-1)).and(tpi.lt(sd.multiply(-0.5))), 5)
     // Valley
-    .where(tpi.lt(sd.multiply(-1)), 6);
+    .where(tpi.lt(sd.multiply(-1)), 6)
+    .rename("slopePosition");
 
   return tpiReclass;
 };
