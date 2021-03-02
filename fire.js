@@ -1,3 +1,5 @@
+var utils = require("users/aazuspan/geeTools:utils.js");
+
 /**
  * Calculate various burn severity metrics between pre- and post-fire imagery.
  * @param {ee.Image} pre A multispectral prefire image.
@@ -173,19 +175,21 @@ exports.periodicFireBoundaries = function (
   start,
   end,
   region,
-  smooth,
-  smoothKernel,
-  cumulative,
-  timeDelta
+  optionalParameters
 ) {
-  smoothKernel = smoothKernel
-    ? smoothKernel
-    : ee.Kernel.circle(2000, "meters", true);
+  // Default parameters
+  var params = {
+    smooth: false,
+    smoothKernel: ee.Kernel.circle(2000, "meters", true),
+    timeDelta: 24,
+    cumulative: false,
+  };
 
-  // Default to using whole day intervals (hours)
-  timeDelta = timeDelta ? timeDelta : 24;
+  // Swap default parameters for user-defined parameters
+  params = utils.updateParameters(params, optionalParameters);
+
   // Convert time delta in hours to milliseconds
-  var msDelta = timeDelta * 3.6e6;
+  var msDelta = params.timeDelta * 3.6e6;
 
   // Millisecond epoch time of each day in the time series
   var periodList = ee.List.sequence(
@@ -197,20 +201,20 @@ exports.periodicFireBoundaries = function (
   var periodCollection = ee.ImageCollection.fromImages(
     periodList.map(function (time) {
       var start = time;
-      var end = ee.Date(time).advance(timeDelta, "hours");
+      var end = ee.Date(time).advance(params.timeDelta, "hours");
 
       return exports.periodFireBoundary(
         start,
         end,
         region,
-        smooth,
-        smoothKernel,
-        timeDelta
+        params.smooth,
+        params.smoothKernel,
+        params.timeDelta
       );
     })
   );
 
-  if (cumulative === true) {
+  if (params.cumulative === true) {
     // Create a placeholder element
     var first = ee.List([
       ee
@@ -241,13 +245,13 @@ exports.periodicFireBoundaries = function (
     "end_date",
     end,
     "cumulative",
-    cumulative,
+    params.cumulative,
     "smoothed",
-    smooth,
+    params.smooth,
     "region",
     region,
     "time_delta",
-    timeDelta
+    params.timeDelta
   );
 
   return periodCollection;
