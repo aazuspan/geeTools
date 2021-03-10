@@ -129,3 +129,43 @@ exports.combineImages = function (imgList, optionalParameters) {
 
   return combined;
 };
+
+/**
+ * Perform band-wise normalization on an image to convert values to range 0 - 1.
+ * @param {ee.Image} img An image.
+ * @param {object} [optionalParameters] A dictionary of optional parameters to override defaults.
+ * @param {number} [optionalParameters.scale] The scale, in image units, to calculate image statistics at.
+ * @param {ee.Geometry} [optionalParameters.region] The area to calculate image statistics over.
+ * @param {number, default 1e13} [optionalParameters.maxPixels] The maximum number of pixels to sample when calculating
+ * image statistics.
+ * @return {ee.Image} The input image with all bands rescaled between 0 and 1.
+ */
+exports.normalizeImage = function (img, optionalParameters) {
+  var params = {
+    region: null,
+    scale: null,
+    maxPixels: 1e13,
+  };
+
+  params = exports.updateParameters(params, optionalParameters);
+
+  var min = img
+    .reduceRegion({
+      reducer: ee.Reducer.min(),
+      geometry: params.region,
+      scale: params.scale,
+      maxPixels: params.maxPixels,
+    })
+    .toImage(img.bandNames());
+
+  var max = img
+    .reduceRegion({
+      reducer: ee.Reducer.max(),
+      geometry: params.region,
+      scale: params.scale,
+      maxPixels: params.maxPixels,
+    })
+    .toImage(img.bandNames());
+
+  return img.subtract(min).divide(max.subtract(min));
+};
