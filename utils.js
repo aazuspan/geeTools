@@ -169,3 +169,48 @@ exports.normalizeImage = function (img, optionalParameters) {
 
   return img.subtract(min).divide(max.subtract(min));
 };
+
+/**
+ * Perform band-wise cyclic encoding with a sine or cosine transformation and rescale to range 0 - 1.
+ * @param {ee.Image} img An image with cyclic data.
+ * @param {object} [optionalParameters] A dictionary of optional parameters to override defaults.
+ * @param {string} [optionalParameters.transform] The encoding transformation to apply, either "sin" or "cos". Default
+ * transformation is "sin".
+ * @param {number} [optionalParameters.scale] The scale, in image units, to calculate image statistics at.
+ * @param {ee.Geometry} [optionalParameters.region] The area to calculate image statistics over.
+ * @param {number, default 1e13} [optionalParameters.maxPixels] The maximum number of pixels to sample when calculating
+ * image statistics.
+ * @return {ee.Image} The input image with all bands sine or cosine transformed and rescaled between 0 and 1.
+ */
+exports.cyclicEncode = function (img, optionalParameters) {
+  var params = {
+    transform: "sin",
+    region: null,
+    scale: null,
+    maxPixels: 1e13,
+  };
+
+  params = exports.updateParameters(params, optionalParameters);
+
+  var max = img
+    .reduceRegion({
+      reducer: ee.Reducer.max(),
+      geometry: params.region,
+      scale: params.scale,
+      maxPixels: params.maxPixels,
+    })
+    .toImage(img.bandNames());
+
+  var rescale = img.multiply(Math.PI).multiply(2).divide(max);
+
+  var transform = ee.String(params.transform).toLowerCase().getInfo();
+
+  switch (transform) {
+    case "cos":
+      return rescale.cos();
+    case "sin":
+      return rescale.sin();
+    default:
+      throw 'Bad transform: "' + transform + '" not in [sin, cos].';
+  }
+};
