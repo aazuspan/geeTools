@@ -214,3 +214,27 @@ exports.cyclicEncode = function (img, optionalParameters) {
       throw 'Bad transform: "' + transform + '" not in [sin, cos].';
   }
 };
+
+/**
+ * Perform band-wise stretching of an input image using a list of stretch values. For example, stretching an RGB image
+ * with a stretch list [1, 2, 1] would double values of the green channel
+ * @param {ee.Image} img A multiband image to stretch.
+ * @param {list} stretch A list of stretch factors to apply band-wise to the image. The number of stretch values must
+ * be equal to the number of image bands.
+ * @returns An image with band values stretched.
+ */
+exports.bandStretch = function (img, stretch) {
+  if (ee.List(stretch).size().neq(img.bandNames().size()).getInfo()) {
+    throw "The number of stretch values must match the number of image bands.";
+  }
+
+  var stretchBands = ee
+    .ImageCollection(
+      stretch.map(function (val) {
+        return ee.Image.constant(val);
+      })
+    )
+    .toBands();
+
+  return img.multiply(stretchBands);
+};
