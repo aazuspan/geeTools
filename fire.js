@@ -89,7 +89,7 @@ exports.periodFireBoundary = function (
     var fireMask = fireQuality.reduce(ee.Reducer.min()).eq(0);
 
     return fireMask;
-  });
+  }, true);
   // Combine GOES16 and GOES17 into one image. Take the min to require
   // agreement between the data sources and minimize false positives.
   // var combined = ee.ImageCollection(boundaries).reduce(ee.Reducer.min());
