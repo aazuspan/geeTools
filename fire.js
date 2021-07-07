@@ -293,7 +293,7 @@ exports.vectorizeBoundary = function (
   }
   // Convert the FeatureCollection to a Feature
   poly = ee.Feature(poly.geometry());
-  poly = poly.set({ date: img.get("date") });
+  poly = poly.set({ date: img.get("end_date") });
   return poly;
 };
 
