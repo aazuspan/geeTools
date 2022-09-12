@@ -21,7 +21,7 @@ exports.relativeHumidity = function (q, p, t) {
  * @returns {ee.Image} Vapor pressure deficit.
  */
 exports.vaporPressureDeficit = function(t, rh) {
-  var vpd = t.multiply(17.27).divide(t.add(237.3)).exp()
+  return t.multiply(17.27).divide(t.add(237.3)).exp()
     .multiply(0.6108)
     .multiply(rh.divide(-100).add(1))
     .rename("VPD");
