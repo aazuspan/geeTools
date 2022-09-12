@@ -10,7 +10,7 @@ exports.relativeHumidity = function (q, p, t) {
   var es = t.multiply(17.67).divide(t.add(243.5)).exp().multiply(6.112);
   var e = q.multiply(p).divide(q.multiply(0.378).add(0.622));
 
-  var RH = e.divide(es).rename("RH").clamp(0, 100);
+  var RH = e.divide(es).clamp(0, 100);
   
   if (RH instanceof ee.Image) {
     RH = RH.rename("RH");
