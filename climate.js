@@ -34,7 +34,7 @@ exports.vaporPressureDeficit = function(t, rh) {
  * @returns {ee.Image} The wind velocity.
  */
 exports.windVelocity = function(u, v) {
-  return u.pow(2).add(v.pow(2)).sqrt();
+  return u.pow(2).add(v.pow(2)).sqrt().rename("WIND");
 }
 
 
